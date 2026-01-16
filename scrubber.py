@@ -13,8 +13,8 @@ from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# UPDATED: Use getLogger instead of basicConfig to avoid conflicts with app.py
+logger = logging.getLogger(__name__)
 
 class LocalPIIScrubber:
     """
@@ -31,9 +31,10 @@ class LocalPIIScrubber:
         try:
             self.analyzer = AnalyzerEngine()
             self.anonymizer = AnonymizerEngine()
-            logging.info("Local PII Scrubber initialized successfully.")
+            # UPDATED: Using module-level logger
+            logger.info("Local PII Scrubber initialized successfully.")
         except Exception as e:
-            logging.error(f"Failed to initialize Presidio: {e}")
+            logger.error(f"Failed to initialize Presidio: {e}")
             raise
 
     def scrub_text(self, text: str) -> Tuple[str, List[str]]:

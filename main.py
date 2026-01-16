@@ -10,11 +10,8 @@ import json
 from scrubber import LocalPIIScrubber
 from evaluator import ClinicalEvaluator
 
-# Configure Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - [ORCHESTRATOR] - %(levelname)s - %(message)s'
-)
+# UPDATED: Use getLogger instead of basicConfig to avoid conflicts with app.py
+logger = logging.getLogger(__name__)
 
 class HealthAIGateway:
     def __init__(self):
@@ -23,16 +20,17 @@ class HealthAIGateway:
         Failed initialization of the Scrubber is a 'Critical Failure'.
         """
         try:
-            logging.info("Initializing Security Layer (Local Scrubber)...")
+            # UPDATED: Using module-level logger
+            logger.info("Initializing Security Layer (Local Scrubber)...")
             self.security_layer = LocalPIIScrubber()
             
-            logging.info("Initializing Intelligence Layer (Cloud Evaluator)...")
+            logger.info("Initializing Intelligence Layer (Cloud Evaluator)...")
             self.intelligence_layer = ClinicalEvaluator()
             
-            logging.info("Gateway ready. Security protocols active.")
+            logger.info("Gateway ready. Security protocols active.")
             
         except Exception as e:
-            logging.critical(f"System Startup Failed: {e}")
+            logger.critical(f"System Startup Failed: {e}")
             raise RuntimeError("Could not initialize Health AI Gateway.")
 
     def process_transaction(self, raw_query: str, raw_context: str, raw_response: str) -> dict:
@@ -42,7 +40,7 @@ class HealthAIGateway:
         """
         
         # --- Step 1: Security Audit (Local Execution) ---
-        logging.info("Step 1: Scrubbing sensitive data locally...")
+        logger.info("Step 1: Scrubbing sensitive data locally...")
         
         safe_query, query_pii = self.security_layer.scrub_text(raw_query)
         safe_context, context_pii = self.security_layer.scrub_text(raw_context)
@@ -51,12 +49,12 @@ class HealthAIGateway:
         total_pii_detected = len(query_pii) + len(context_pii) + len(response_pii)
         
         if total_pii_detected > 0:
-            logging.warning(f"PII Detected and Redacted. Count: {total_pii_detected}")
+            logger.warning(f"PII Detected and Redacted. Count: {total_pii_detected}")
         else:
-            logging.info("No PII detected in transaction.")
+            logger.info("No PII detected in transaction.")
 
         # --- Step 2: Clinical Evaluation (Cloud Execution) ---
-        logging.info("Step 2: Sending sanitized data to Gemini for evaluation...")
+        logger.info("Step 2: Sending sanitized data to Gemini for evaluation...")
         
         try:
             evaluation_result = self.intelligence_layer.evaluate_transaction(
@@ -64,10 +62,10 @@ class HealthAIGateway:
                 context=safe_context,
                 response=safe_response
             )
-            logging.info("Evaluation complete. Score received.")
+            logger.info("Evaluation complete. Score received.")
             
         except Exception as e:
-            logging.error(f"Cloud Evaluation failed: {e}")
+            logger.error(f"Cloud Evaluation failed: {e}")
             return {"error": "Evaluation Service Unavailable", "status": 503}
 
         # --- Step 3: Result Synthesis ---
