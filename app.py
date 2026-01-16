@@ -3,48 +3,57 @@ Asclepius API Interface
 -----------------------
 To Run: uvicorn app:app --reload
 """
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from main import HealthAIGateway
+from dotenv import load_dotenv
+import logging
 
-app = FastAPI(title="Asclepius: Clinical Guardrails API")
+# Load env vars immediately
+load_dotenv()
 
-# Global variable to hold the gateway instance
+# Configure logging centrally
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("AsclepiusAPI")
+
 gateway = None
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize the gateway when the server starts.
-    """
+# MODERN PATTERN: Lifespan Context Manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
     global gateway
     try:
+        logger.info("Booting Asclepius Gateway...")
         gateway = HealthAIGateway()
+        yield
     except Exception as e:
-        print(f"Critical Startup Error: {e}")
+        logger.critical(f"Critical Startup Error: {e}")
+        # In production, you might want to stop the app here
+        yield
+    finally:
+        # Shutdown logic (cleanup)
+        logger.info("Shutting down Gateway...")
 
-# Define the expected JSON input format
+app = FastAPI(title="Asclepius: Clinical Guardrails API", lifespan=lifespan)
+
 class EvaluationRequest(BaseModel):
-    query: str
-    context: str
-    response: str
+    # SECURITY: Add limits to prevent DOS attacks
+    query: str = Field(..., max_length=1000)
+    context: str = Field(..., max_length=10000)
+    response: str = Field(..., max_length=5000)
 
 @app.post("/evaluate")
 async def evaluate_health_ai(request: EvaluationRequest):
-    """
-    Ingestion Endpoint: Receives a transaction and returns a safety score.
-    """
     if not gateway:
         raise HTTPException(status_code=503, detail="Gateway not initialized")
     
-    # Pass data to the Orchestrator
-    result = gateway.process_transaction(
+    return gateway.process_transaction(
         request.query, 
         request.context, 
         request.response
     )
-    
-    return result
 
 @app.get("/health")
 async def health_check():
