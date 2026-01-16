@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+google-generativeai
+presidio-analyzer
+presidio-anonymizer
+spacy
+pydantic
+# Note: After installing these, you must run: python -m spacy download en_core_web_lg
