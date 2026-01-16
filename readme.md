@@ -39,7 +39,7 @@ graph LR
 ### Key Components
 
 1. **Privacy Layer (Scrubber):** Executes *locally* on the CPU using `Microsoft Presidio`. Detects and replaces PHI (Names, MRNs, Phone Numbers) with semantic placeholders (e.g., `<PATIENT_NAME>`) to preserve grammatical context without exposing data.
-2. **Intelligence Layer (Evaluator):** Uses `Google Gemini 1.5 Flash` as a "Clinical Judge." It evaluates the candidate response against a provided context window (e.g., FDA label) to detect dangerous omissions or hallucinations.
+2. **Intelligence Layer (Evaluator):** Uses `gemini-2.5-flash-lite` as a "Clinical Judge." It evaluates the candidate response against a provided context window (e.g., FDA label) to detect dangerous omissions or hallucinations.
 3. **Orchestrator:** A `FastAPI` microservice that enforces the security boundary, ensuring no data exits the local environment until it is sanitized.
 
 ---
