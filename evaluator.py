@@ -18,7 +18,7 @@ from google.genai import types
 load_dotenv()
 
 class ClinicalEvaluator:
-    def __init__(self, model_name: str = 'gemini-1.5-flash'):
+    def __init__(self, model_name: str = 'gemini-2.5-flash-lite'):
         """
         Initializes the evaluator using the modern Google Gen AI SDK.
         """
